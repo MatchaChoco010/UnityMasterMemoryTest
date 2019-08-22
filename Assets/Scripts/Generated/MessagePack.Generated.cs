@@ -43,12 +43,14 @@ namespace MessagePack.Resolvers
 
         static GeneratedResolverGetFormatterHelper()
         {
-            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(4)
+            lookup = new global::System.Collections.Generic.Dictionary<Type, int>(6)
             {
-                {typeof(global::Gender), 0 },
-                {typeof(global::Person), 1 },
-                {typeof(global::Skill), 2 },
-                {typeof(global::SkillParameter), 3 },
+                {typeof(global::System.Collections.Generic.List<int>), 0 },
+                {typeof(global::Gender), 1 },
+                {typeof(global::SaveData), 2 },
+                {typeof(global::Person), 3 },
+                {typeof(global::Skill), 4 },
+                {typeof(global::SkillParameter), 5 },
             };
         }
 
@@ -59,10 +61,12 @@ namespace MessagePack.Resolvers
 
             switch (key)
             {
-                case 0: return new MessagePack.Formatters.GenderFormatter();
-                case 1: return new MessagePack.Formatters.PersonFormatter();
-                case 2: return new MessagePack.Formatters.SkillFormatter();
-                case 3: return new MessagePack.Formatters.SkillParameterFormatter();
+                case 0: return new global::MessagePack.Formatters.ListFormatter<int>();
+                case 1: return new MessagePack.Formatters.GenderFormatter();
+                case 2: return new MessagePack.Formatters.SaveDataFormatter();
+                case 3: return new MessagePack.Formatters.PersonFormatter();
+                case 4: return new MessagePack.Formatters.SkillFormatter();
+                case 5: return new MessagePack.Formatters.SkillParameterFormatter();
                 default: return null;
             }
         }
@@ -115,6 +119,61 @@ namespace MessagePack.Formatters
 {
     using System;
     using MessagePack;
+
+
+    public sealed class SaveDataFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::SaveData>
+    {
+
+        public int Serialize(ref byte[] bytes, int offset, global::SaveData value, global::MessagePack.IFormatterResolver formatterResolver)
+        {
+            if (value == null)
+            {
+                return global::MessagePack.MessagePackBinary.WriteNil(ref bytes, offset);
+            }
+            
+            var startOffset = offset;
+            offset += global::MessagePack.MessagePackBinary.WriteFixedArrayHeaderUnsafe(ref bytes, offset, 1);
+            offset += formatterResolver.GetFormatterWithVerify<global::System.Collections.Generic.List<int>>().Serialize(ref bytes, offset, value.SkillLevels, formatterResolver);
+            return offset - startOffset;
+        }
+
+        public global::SaveData Deserialize(byte[] bytes, int offset, global::MessagePack.IFormatterResolver formatterResolver, out int readSize)
+        {
+            if (global::MessagePack.MessagePackBinary.IsNil(bytes, offset))
+            {
+                readSize = 1;
+                return null;
+            }
+
+            var startOffset = offset;
+            var length = global::MessagePack.MessagePackBinary.ReadArrayHeader(bytes, offset, out readSize);
+            offset += readSize;
+
+            var __SkillLevels__ = default(global::System.Collections.Generic.List<int>);
+
+            for (int i = 0; i < length; i++)
+            {
+                var key = i;
+
+                switch (key)
+                {
+                    case 0:
+                        __SkillLevels__ = formatterResolver.GetFormatterWithVerify<global::System.Collections.Generic.List<int>>().Deserialize(bytes, offset, formatterResolver, out readSize);
+                        break;
+                    default:
+                        readSize = global::MessagePack.MessagePackBinary.ReadNextBlock(bytes, offset);
+                        break;
+                }
+                offset += readSize;
+            }
+
+            readSize = offset - startOffset;
+
+            var ____result = new global::SaveData(__SkillLevels__);
+            ____result.SkillLevels = __SkillLevels__;
+            return ____result;
+        }
+    }
 
 
     public sealed class PersonFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::Person>
